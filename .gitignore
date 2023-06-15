@@ -1,2 +1,2 @@
 .idea
-egal_cli.egg-info
+*.egg*
