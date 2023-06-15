@@ -1,0 +1,5 @@
+click==8.0.3
+Jinja2==3.0.3
+python-dotenv==1.0.0
+PyYAML==6.0
+setuptools==56.0.0
