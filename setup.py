@@ -14,4 +14,8 @@ setup(
         [console_scripts]
         egal=src.cli:cli
     """,
+    setuptools_git_versioning={
+        "enabled": True,
+    },
+    setup_requires=["setuptools-git-versioning<2"],
 )
