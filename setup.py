@@ -1,6 +1,6 @@
 from setuptools import setup
 
-requirements = []
+requirements = ["setuptools-git-versioning==1.13.3"]
 for require in open("requirements.txt", "r").read().split("\n"):
     if require != "":
         requirements.append(require)
