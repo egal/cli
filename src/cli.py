@@ -1,6 +1,5 @@
 # -*- coding: utf-8 -*-
 import os
-
 import click
 import jinja2
 import yaml
@@ -35,14 +34,13 @@ def docker_compose():
 
 
 @cli.group()
-def jinja():
+def jinja(verbose):
     """"""
 
 
 @jinja.command("make")
 @click.option("-d", "--directory", default=".")
-@click.option("--verbose", is_flag=True)
-def jinja_make(verbose, directory):
+def jinja_make(directory):
     """"""
     root = directory
     load_dotenv(dotenv_path=f"{root}/.env")
@@ -51,14 +49,9 @@ def jinja_make(verbose, directory):
             file_path = f"{directory_path}/{file_name}"
 
             if not file_path.endswith(".jinja"):
-                if verbose:
-                    print(f"Skipping {file_path}")
                 continue
 
             template_file_path = file_path
-
-            if verbose:
-                print(f"Processing {template_file_path}")
 
             result_file = template_file_path.replace(".jinja", "")
 
