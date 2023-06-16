@@ -34,7 +34,7 @@ def docker_compose():
 
 
 @cli.group()
-def jinja(verbose):
+def jinja():
     """"""
 
 

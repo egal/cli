@@ -3,5 +3,5 @@
 ## Install
 
 ```shell
-pip install .
+pip install git+https://github.com/egal/cli.git
 ```
