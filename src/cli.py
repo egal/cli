@@ -1,10 +1,17 @@
 # -*- coding: utf-8 -*-
 import os
+import re
+
 import click
 import jinja2
 import yaml
 from dotenv import load_dotenv
 import caseconverter
+from pprint import pprint
+
+from src.packages.compose_file_names_validator import ComposeFileNamesValidator
+from src.packages.compose_files_sorter import ComposeFilesSorter
+import dotenv
 
 
 @click.group()
@@ -31,6 +38,69 @@ def bar():
 @docker.group("compose")
 def docker_compose():
     """"""
+
+
+@docker_compose.group("config")
+def docker_compose_config():
+    """"""
+
+
+@docker_compose_config.command("find")
+@click.option(
+    "-d", "--directory",
+    default=".", show_default=True,
+)
+@click.option(
+    "--exclude",
+    default=r"(\/vendor\/|\/node_modules\/)", show_default=True,
+)
+@click.option(
+    "-e", "--environment",
+    default="local", show_default=True,
+    type=click.Choice(["local", "production", "development", "testing"]),
+)
+@click.option(
+    "--raw",
+    is_flag=True,
+    default=False, show_default=True,
+)
+@click.option(
+    "--overwrite-env-file",
+    is_flag=True,
+    default=False, show_default=True,
+)
+def docker_compose_config_find(directory, exclude, environment, raw, overwrite_env_file):
+    """"""
+    directory = os.path.abspath(directory)
+
+    if not raw:
+        print(f"Searching for docker-compose files in `{directory}` directory...")
+
+    compose_files = []
+    validator = ComposeFileNamesValidator(environment)
+
+    for directory_path, sub_directories_paths, files_names in os.walk(directory):
+        for file_name in files_names:
+            file_path = f"{directory_path}/{file_name}"
+            if validator.validate(file_name) and not re.search(exclude, file_path):
+                compose_files.append(file_path.replace(directory + "/", ""))
+
+    ComposeFilesSorter().sort(compose_files)
+
+    compose_file_variable_value = ":".join(compose_files)
+
+    if raw:
+        print(compose_file_variable_value)
+        exit(0)
+
+    print("Collected compose files:")
+    for compose_file in compose_files:
+        print(f" - {compose_file}")
+
+    if overwrite_env_file:
+        env_file_path = f"{directory}/.env"
+        print(f"Overwriting `{env_file_path}` file...")
+        dotenv.set_key(env_file_path, "COMPOSE_FILE", compose_file_variable_value)
 
 
 @cli.group()
