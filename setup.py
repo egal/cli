@@ -7,7 +7,7 @@ for require in open("requirements.txt", "r").read().split("\n"):
 
 setup(
     name="egal-cli",
-    packages=["src"],
+    packages=["src/**/*"],
     include_package_data=True,
     install_requires=requirements,
     entry_points="""
