@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import os
 import re
+import subprocess
 
 import click
 import jinja2
@@ -10,6 +11,7 @@ import caseconverter
 from pprint import pprint
 
 from src.packages.compose_file_names_validator import ComposeFileNamesValidator
+from src.packages.compose_files_finder import ComposeFilesFinder
 from src.packages.compose_files_sorter import ComposeFilesSorter
 import dotenv
 
@@ -22,16 +24,6 @@ def cli():
 
 @cli.group()
 def docker():
-    """"""
-
-
-@cli.command()
-def foo():
-    """"""
-
-
-@cli.command()
-def bar():
     """"""
 
 
@@ -69,38 +61,71 @@ def docker_compose_config():
     is_flag=True,
     default=False, show_default=True,
 )
-def docker_compose_config_find(directory, exclude, environment, raw, overwrite_env_file):
+def docker_compose_config_find(directory, raw, overwrite_env_file, environment, exclude):
     """"""
     directory = os.path.abspath(directory)
 
     if not raw:
         print(f"Searching for docker-compose files in `{directory}` directory...")
 
-    compose_files = []
-    validator = ComposeFileNamesValidator(environment)
-
-    for directory_path, sub_directories_paths, files_names in os.walk(directory):
-        for file_name in files_names:
-            file_path = f"{directory_path}/{file_name}"
-            if validator.validate(file_name) and not re.search(exclude, file_path):
-                compose_files.append(file_path.replace(directory + "/", ""))
-
-    ComposeFilesSorter().sort(compose_files)
-
-    compose_file_variable_value = ":".join(compose_files)
+    finder = ComposeFilesFinder(directory, environment, exclude)
 
     if raw:
-        print(compose_file_variable_value)
+        print(finder.get_files_as_raw())
         exit(0)
 
     print("Collected compose files:")
-    for compose_file in compose_files:
+    for compose_file in finder.files:
         print(f" - {compose_file}")
 
     if overwrite_env_file:
         env_file_path = f"{directory}/.env"
         print(f"Overwriting `{env_file_path}` file...")
-        dotenv.set_key(env_file_path, "COMPOSE_FILE", compose_file_variable_value)
+        dotenv.set_key(env_file_path, "COMPOSE_FILE", finder.get_files_as_raw())
+
+
+@docker_compose_config.command("collect")
+@click.option(
+    "-d", "--directory",
+    default=".", show_default=True,
+)
+@click.option(
+    "-m", "--mode",
+    default="compose", show_default=True,
+    type=click.Choice(["compose", "stack"]),
+)
+def docker_compose_config_collect(directory, mode):
+    """"""
+    print("Collecting compose files...")
+    directory = os.path.abspath(directory)
+    load_dotenv(dotenv_path=f"{directory}/.env")
+    compose_files = os.getenv("COMPOSE_FILE")
+
+    compose_options = []
+    for file in compose_files.split(":"):
+        compose_options.extend(["-f", file])
+
+    docker_compose_config_cmd = subprocess.run([
+        "docker", "compose",
+        *compose_options,
+        "config", "--no-interpolate",
+    ], stdout=subprocess.PIPE)
+
+    config = yaml.safe_load(docker_compose_config_cmd.stdout.decode("utf-8"))
+
+    if mode == "stack":
+        del config["name"]
+        for service_name, service in config["services"].items():
+            if "depends_on" in service:
+                service["depends_on"] = list(service["depends_on"].keys())
+            if "ports" in service:
+                for port in service["ports"]:
+                    if "published" in port and isinstance(port["published"], str):
+                        port["published"] = int(port["published"])
+
+    output_file_path = f"{directory}/docker-{mode}.yml"
+    print(f"Writing config to `{output_file_path}` file...")
+    open(output_file_path, "w").write(yaml.safe_dump(config))
 
 
 @cli.group()
@@ -112,6 +137,7 @@ def jinja():
 @click.option("-d", "--directory", default=".")
 def jinja_make(directory):
     """"""
+    print("Making files from Jinja templates...")
     root = directory
     load_dotenv(dotenv_path=f"{root}/.env")
     for directory_path, sub_directories_paths, files_names in os.walk(root):

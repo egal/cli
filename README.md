@@ -9,12 +9,11 @@ pip install git+https://github.com/egal/cli.git
 ## Update
 
 ```shell
-pip uninstall egal-cli
-pip install git+https://github.com/egal/cli.git
+pip install --upgrade git+https://github.com/egal/cli.git
 ```
 
 ## Uninstall
 
 ```shell
-pip uninstall egal-cli
+pip uninstall -y egal-cli
 ```
