@@ -10,6 +10,8 @@ from dotenv import load_dotenv
 import caseconverter
 from pprint import pprint
 
+from pip._internal.utils.misc import tabulate
+
 from src.packages.compose_file_names_validator import ComposeFileNamesValidator
 from src.packages.compose_files_finder import ComposeFilesFinder
 from src.packages.compose_files_sorter import ComposeFilesSorter
@@ -20,6 +22,31 @@ import dotenv
 @click.version_option()
 def cli():
     """"""
+
+
+@cli.command()
+def list():
+    print("Available commands:")
+
+    def command_tree(command, previous_command_prefix=None):
+        if previous_command_prefix == "cli":
+            previous_command_prefix = None
+
+        if isinstance(command, click.core.Group):
+            for sub_command in command.commands.values():
+                command_tree(sub_command,
+                             f"{previous_command_prefix} {command.name}" if previous_command_prefix else command.name)
+        else:
+            output = " - "
+            if previous_command_prefix:
+                output += f"{previous_command_prefix} "
+            output += command.name
+            help = command.get_short_help_str()
+            if help:
+                output += " : " + help
+            print(output)
+
+    command_tree(cli)
 
 
 @cli.group()
@@ -62,7 +89,7 @@ def docker_compose_config():
     default=False, show_default=True,
 )
 def docker_compose_config_find(directory, raw, overwrite_env_file, environment, exclude):
-    """"""
+    """Find Docker Compose files"""
     directory = os.path.abspath(directory)
 
     if not raw:
@@ -95,7 +122,7 @@ def docker_compose_config_find(directory, raw, overwrite_env_file, environment, 
     type=click.Choice(["compose", "stack"]),
 )
 def docker_compose_config_collect(directory, mode):
-    """"""
+    """Collect Docker Compose files into one file"""
     print("Collecting compose files...")
     directory = os.path.abspath(directory)
     load_dotenv(dotenv_path=f"{directory}/.env")
@@ -136,7 +163,7 @@ def jinja():
 @jinja.command("make")
 @click.option("-d", "--directory", default=".")
 def jinja_make(directory):
-    """"""
+    """Find and make files from Jinja templates"""
     print("Making files from Jinja templates...")
     root = directory
     load_dotenv(dotenv_path=f"{root}/.env")
