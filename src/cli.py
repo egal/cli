@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
 import os
-import re
 import subprocess
-
 import click
 import jinja2
 import yaml
 from dotenv import load_dotenv
 import caseconverter
-from pprint import pprint
-
-from pip._internal.utils.misc import tabulate
-
-from src.packages.compose_file_names_validator import ComposeFileNamesValidator
 from src.packages.compose_files_finder import ComposeFilesFinder
-from src.packages.compose_files_sorter import ComposeFilesSorter
 import dotenv
 
 
@@ -34,8 +26,10 @@ def list():
 
         if isinstance(command, click.core.Group):
             for sub_command in command.commands.values():
-                command_tree(sub_command,
-                             f"{previous_command_prefix} {command.name}" if previous_command_prefix else command.name)
+                command_tree(
+                    sub_command,
+                    f"{previous_command_prefix} {command.name}" if previous_command_prefix else command.name
+                )
         else:
             output = " - "
             if previous_command_prefix:
