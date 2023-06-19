@@ -108,7 +108,7 @@ def docker_compose_config_collect(directory, mode):
     docker_compose_config_cmd = subprocess.run([
         "docker", "compose",
         *compose_options,
-        "config", "--no-interpolate",
+        "config",
     ], stdout=subprocess.PIPE)
 
     config = yaml.safe_load(docker_compose_config_cmd.stdout.decode("utf-8"))
