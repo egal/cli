@@ -149,7 +149,7 @@ def docker_compose_config_collect(directory, mode):
     open(output_file_path, "w").write(yaml.safe_dump(config))
 
 
-@cli.group()
+@cli.group("jinja")
 def cli_jinja():
     """"""
 
