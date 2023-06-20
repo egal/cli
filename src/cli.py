@@ -16,8 +16,8 @@ def cli():
     """"""
 
 
-@cli.command()
-def list():
+@cli.command("list")
+def cli_list():
     print("Available commands:")
 
     def command_tree(command, previous_command_prefix=None):
@@ -43,22 +43,22 @@ def list():
     command_tree(cli)
 
 
-@cli.group()
-def docker():
+@cli.group("docker")
+def cli_docker():
     """"""
 
 
-@docker.group("compose")
-def docker_compose():
+@cli_docker.group("compose")
+def cli_docker_compose():
     """"""
 
 
-@docker_compose.group("config")
-def docker_compose_config():
+@cli_docker_compose.group("config")
+def cli_docker_compose_config():
     """"""
 
 
-@docker_compose_config.command("find")
+@cli_docker_compose_config.command("find")
 @click.option(
     "-d", "--directory",
     default=".", show_default=True,
@@ -82,7 +82,7 @@ def docker_compose_config():
     is_flag=True,
     default=False, show_default=True,
 )
-def docker_compose_config_find(directory, raw, overwrite_env_file, environment, exclude):
+def cli_docker_compose_config_find(directory, raw, overwrite_env_file, environment, exclude):
     """Find Docker Compose files"""
     directory = os.path.abspath(directory)
 
@@ -105,7 +105,7 @@ def docker_compose_config_find(directory, raw, overwrite_env_file, environment, 
         dotenv.set_key(env_file_path, "COMPOSE_FILE", finder.get_files_as_raw())
 
 
-@docker_compose_config.command("collect")
+@cli_docker_compose_config.command("collect")
 @click.option(
     "-d", "--directory",
     default=".", show_default=True,
@@ -150,13 +150,13 @@ def docker_compose_config_collect(directory, mode):
 
 
 @cli.group()
-def jinja():
+def cli_jinja():
     """"""
 
 
-@jinja.command("make")
+@cli_jinja.command("make")
 @click.option("-d", "--directory", default=".")
-def jinja_make(directory):
+def cli_jinja_make(directory):
     """Find and make files from Jinja templates"""
     print("Making files from Jinja templates...")
     root = directory
