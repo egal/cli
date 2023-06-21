@@ -124,20 +124,8 @@ def docker_compose_config_collect(directory, mode, verbose):
     """Collect Docker Compose files into one file"""
     print("Collecting compose files...")
     directory = os.path.abspath(directory)
-    load_dotenv(dotenv_path=f"{directory}/.env")
-    compose_files = os.getenv("COMPOSE_FILE")
 
-    verbose and print(f"Compose files from environment: {compose_files}")
-
-    compose_options = []
-    for file in compose_files.split(":") if compose_files is not None else []:
-        compose_options.extend(["-f", file])
-
-    docker_compose_config_cmd = subprocess.run([
-        "docker", "compose",
-        *compose_options,
-        "config",
-    ], stdout=subprocess.PIPE)
+    docker_compose_config_cmd = subprocess.run(["docker", "compose", "config"], stdout=subprocess.PIPE)
 
     verbose and print(f"Command: {docker_compose_config_cmd.args}")
     stdout = docker_compose_config_cmd.stdout.decode("utf-8")
