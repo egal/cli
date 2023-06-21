@@ -115,15 +115,22 @@ def cli_docker_compose_config_find(directory, raw, overwrite_env_file, environme
     default="compose", show_default=True,
     type=click.Choice(["compose", "stack"]),
 )
-def docker_compose_config_collect(directory, mode):
+@click.option(
+    "--verbose",
+    is_flag=True,
+    default=False, show_default=False,
+)
+def docker_compose_config_collect(directory, mode, verbose):
     """Collect Docker Compose files into one file"""
     print("Collecting compose files...")
     directory = os.path.abspath(directory)
     load_dotenv(dotenv_path=f"{directory}/.env")
     compose_files = os.getenv("COMPOSE_FILE")
 
+    verbose and print(f"Compose files from environment: {compose_files}")
+
     compose_options = []
-    for file in compose_files.split(":"):
+    for file in compose_files.split(":") if compose_files is not None else []:
         compose_options.extend(["-f", file])
 
     docker_compose_config_cmd = subprocess.run([
@@ -132,20 +139,31 @@ def docker_compose_config_collect(directory, mode):
         "config",
     ], stdout=subprocess.PIPE)
 
-    config = yaml.safe_load(docker_compose_config_cmd.stdout.decode("utf-8"))
+    verbose and print(f"Command: {docker_compose_config_cmd.args}")
+    stdout = docker_compose_config_cmd.stdout.decode("utf-8")
+    verbose and print(f"Stdout: {stdout}")
+
+    config = yaml.safe_load(stdout)
+
+    if config is None:
+        print("ERROR: Error while getting config from Docker Compose CLI!")
+        exit(1)
 
     if mode == "stack":
         del config["name"]
-        for service_name, service in config["services"].items():
-            if "depends_on" in service:
-                service["depends_on"] = list(service["depends_on"].keys())
-            if "ports" in service:
-                for port in service["ports"]:
-                    if "published" in port and isinstance(port["published"], str):
-                        port["published"] = int(port["published"])
+        if "services" in config:
+            for service_name, service in config["services"].items():
+                if "depends_on" in service:
+                    service["depends_on"] = list(service["depends_on"].keys())
+                if "ports" in service:
+                    for port in service["ports"]:
+                        if "published" in port and isinstance(port["published"], str):
+                            port["published"] = int(port["published"])
 
     output_file_path = f"{directory}/docker-{mode}.yml"
     print(f"Writing config to `{output_file_path}` file...")
+    if os.path.exists(output_file_path):
+        print(f"WARNING: `{output_file_path}` file already exists and will be overwritten!")
     open(output_file_path, "w").write(yaml.safe_dump(config))
 
 
