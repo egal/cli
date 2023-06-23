@@ -42,17 +42,16 @@ def cli_git_version_bump():
     new_version_choose = inquirer.list_input(
         "Select version to bump",
         choices=[
-            f"Alpha: {version.bump_prerelease('alpha')}",
-            f"Beta: {version.bump_prerelease('beta')}",
-            f"RC: {version.bump_prerelease('rc')}",
-            f"Patch: {version.bump_patch()}",
-            f"Minor: {version.bump_minor()}",
-            f"Major: {version.bump_major()}",
+            f"Alpha: v{version.bump_prerelease('alpha')}",
+            f"Beta: v{version.bump_prerelease('beta')}",
+            f"RC: v{version.bump_prerelease('rc')}",
+            f"Patch: v{version.bump_patch()}",
+            f"Minor: v{version.bump_minor()}",
+            f"Major: v{version.bump_major()}",
         ],
     )
-    new_version = new_version_choose.split(": ")[1]
+    new_tag = new_version_choose.split(": ")[1]
 
-    new_tag = f"v{new_version}"
     click.secho(f"New version: {new_tag}, creating tag...", fg="yellow")
     subprocess.run(["git", "tag", new_tag])
     click.secho("Tag created", fg="green")
