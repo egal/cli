@@ -8,12 +8,54 @@ from dotenv import load_dotenv
 import caseconverter
 from src.packages.compose_files_finder import ComposeFilesFinder
 import dotenv
+import inquirer
+import semver
 
 
 @click.group()
 @click.version_option()
 def cli():
     """"""
+
+
+@cli.group("git")
+def cli_git():
+    """"""
+
+
+@cli_git.group("version")
+def cli_git_version():
+    """"""
+
+
+@cli_git_version.command("bump")
+def cli_git_version_bump():
+    """Bump version"""
+    click.secho("Bumping version...", fg="green")
+
+    last_tag = subprocess.run(["git", "describe", "--tags", "--abbrev=0", "--match", "v*.*.*"],
+                              stdout=subprocess.PIPE).stdout.decode("utf-8")
+    click.secho(f"Found latest version: {last_tag}", fg="yellow")
+
+    version = semver.Version.parse(last_tag.removeprefix("v"))
+
+    new_version_choose = inquirer.list_input(
+        "Select version to bump",
+        choices=[
+            f"Alpha: {version.bump_prerelease('alpha')}",
+            f"Beta: {version.bump_prerelease('beta')}",
+            f"RC: {version.bump_prerelease('rc')}",
+            f"Patch: {version.bump_patch()}",
+            f"Minor: {version.bump_minor()}",
+            f"Major: {version.bump_major()}",
+        ],
+    )
+    new_version = new_version_choose.split(": ")[1]
+
+    new_tag = f"v{new_version}"
+    click.secho(f"New version: {new_tag}, creating tag...", fg="yellow")
+    subprocess.run(["git", "tag", new_tag])
+    click.secho("Tag created", fg="green")
 
 
 @cli.command("list")
