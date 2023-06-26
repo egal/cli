@@ -172,7 +172,15 @@ def docker_compose_config_collect(directory, mode, verbose):
     stdout = docker_compose_config_cmd.stdout.decode("utf-8")
     verbose and print(f"Stdout: {stdout}")
 
+    def yaml_int_constructor(loader, node):
+        value = loader.construct_scalar(node)
+        return int(value) if not value.startswith("0x") else value
+
+    # Ignore HexInt parsing in yaml.SafeLoader
+    yaml.add_constructor('tag:yaml.org,2002:int', yaml_int_constructor, Loader=yaml.SafeLoader)
+
     config = yaml.safe_load(stdout)
+    verbose and print(f"Config: {config}")
 
     if config is None:
         print("ERROR: Error while getting config from Docker Compose CLI!")
@@ -193,7 +201,9 @@ def docker_compose_config_collect(directory, mode, verbose):
     print(f"Writing config to `{output_file_path}` file...")
     if os.path.exists(output_file_path):
         print(f"WARNING: `{output_file_path}` file already exists and will be overwritten!")
-    open(output_file_path, "w").write(yaml.safe_dump(config))
+    content = yaml.safe_dump(config)
+    verbose and print(f"Content: {content}")
+    open(output_file_path, "w").write(content)
 
 
 @cli.group("jinja")
