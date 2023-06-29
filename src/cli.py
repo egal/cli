@@ -152,6 +152,9 @@ def cli_docker_compose_config_find(directory, raw, overwrite_env_file, environme
     default=".", show_default=True,
 )
 @click.option(
+    "-o", "--output",
+)
+@click.option(
     "-m", "--mode",
     default="compose", show_default=True,
     type=click.Choice(["compose", "stack"]),
@@ -161,10 +164,16 @@ def cli_docker_compose_config_find(directory, raw, overwrite_env_file, environme
     is_flag=True,
     default=False, show_default=False,
 )
-def docker_compose_config_collect(directory, mode, verbose):
+def docker_compose_config_collect(directory, mode, verbose, output):
     """Collect Docker Compose files into one file"""
     print("Collecting compose files...")
     directory = os.path.abspath(directory)
+    if output is None:
+        output = f"{directory}/docker-{mode}.yml"
+    else:
+        output = os.path.abspath(output)
+
+    verbose and print(f"Output: {output}")
 
     docker_compose_config_cmd = subprocess.run(["docker", "compose", "config"], stdout=subprocess.PIPE)
 
@@ -197,13 +206,12 @@ def docker_compose_config_collect(directory, mode, verbose):
                         if "published" in port and isinstance(port["published"], str):
                             port["published"] = int(port["published"])
 
-    output_file_path = f"{directory}/docker-{mode}.yml"
-    print(f"Writing config to `{output_file_path}` file...")
-    if os.path.exists(output_file_path):
-        print(f"WARNING: `{output_file_path}` file already exists and will be overwritten!")
+    print(f"Writing config to `{output}` file...")
+    if os.path.exists(output):
+        print(f"WARNING: `{output}` file already exists and will be overwritten!")
     content = yaml.safe_dump(config)
     verbose and print(f"Content: {content}")
-    open(output_file_path, "w").write(content)
+    open(output, "w").write(content)
 
 
 @cli.group("jinja")
