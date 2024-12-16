@@ -111,7 +111,7 @@ def cli_docker_compose_config():
 @click.option(
     "-e", "--environment",
     default="local", show_default=True,
-    type=click.Choice(["local", "production", "development", "testing"]),
+    type=click.Choice(["local", "production", "development", "testing", "staging"]),
 )
 @click.option(
     "--raw",
